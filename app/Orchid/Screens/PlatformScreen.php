@@ -4,6 +4,14 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens;
 
+use App\Models\CashierAccount;
+use App\Models\CmsPage;
+use App\Models\CustomerOrder;
+use App\Models\MenuCategory;
+use App\Models\MenuItem;
+use App\Models\PromoBanner;
+use App\Models\VoucherCard;
+use App\Models\VoucherPackage;
 use Orchid\Screen\Action;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
@@ -17,7 +25,20 @@ class PlatformScreen extends Screen
      */
     public function query(): iterable
     {
-        return [];
+        return [
+            'stats' => [
+                'categories' => MenuCategory::count(),
+                'menuItems' => MenuItem::count(),
+                'promoBanners' => PromoBanner::count(),
+                'pages' => CmsPage::count(),
+                'voucherPackages' => VoucherPackage::count(),
+                'voucherCards' => VoucherCard::count(),
+                'cashiers' => CashierAccount::count(),
+                'pendingOrders' => CustomerOrder::query()
+                    ->where('order_status', CustomerOrder::ORDER_STATUS_PENDING)
+                    ->count(),
+            ],
+        ];
     }
 
     /**
@@ -25,7 +46,7 @@ class PlatformScreen extends Screen
      */
     public function name(): ?string
     {
-        return 'Get Started';
+        return 'RestoPanel Dashboard';
     }
 
     /**
@@ -33,7 +54,7 @@ class PlatformScreen extends Screen
      */
     public function description(): ?string
     {
-        return 'Welcome to your Orchid application.';
+        return 'Kontrol menu, konten, voucher, kasir, dan monitoring order pelanggan dari satu panel.';
     }
 
     /**
@@ -54,8 +75,7 @@ class PlatformScreen extends Screen
     public function layout(): iterable
     {
         return [
-            Layout::view('platform::partials.update-assets'),
-            Layout::view('platform::partials.welcome'),
+            Layout::view('platform.dashboard'),
         ];
     }
 }

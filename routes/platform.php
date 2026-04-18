@@ -2,21 +2,27 @@
 
 declare(strict_types=1);
 
-use App\Orchid\Screens\Examples\ExampleActionsScreen;
-use App\Orchid\Screens\Examples\ExampleCardsScreen;
-use App\Orchid\Screens\Examples\ExampleChartsScreen;
-use App\Orchid\Screens\Examples\ExampleFieldsAdvancedScreen;
-use App\Orchid\Screens\Examples\ExampleFieldsScreen;
-use App\Orchid\Screens\Examples\ExampleGridScreen;
-use App\Orchid\Screens\Examples\ExampleLayoutsScreen;
-use App\Orchid\Screens\Examples\ExampleScreen;
-use App\Orchid\Screens\Examples\ExampleTextEditorsScreen;
+use App\Orchid\Screens\Catalog\MenuCategoryEditScreen;
+use App\Orchid\Screens\Catalog\MenuCategoryListScreen;
+use App\Orchid\Screens\Catalog\MenuItemEditScreen;
+use App\Orchid\Screens\Catalog\MenuItemListScreen;
+use App\Orchid\Screens\Content\CmsPageEditScreen;
+use App\Orchid\Screens\Content\CmsPageListScreen;
+use App\Orchid\Screens\Content\PromoBannerEditScreen;
+use App\Orchid\Screens\Content\PromoBannerListScreen;
+use App\Orchid\Screens\Operations\CashierAccountEditScreen;
+use App\Orchid\Screens\Operations\CashierAccountListScreen;
+use App\Orchid\Screens\Operations\CustomerOrderListScreen;
 use App\Orchid\Screens\PlatformScreen;
 use App\Orchid\Screens\Role\RoleEditScreen;
 use App\Orchid\Screens\Role\RoleListScreen;
 use App\Orchid\Screens\User\UserEditScreen;
 use App\Orchid\Screens\User\UserListScreen;
 use App\Orchid\Screens\User\UserProfileScreen;
+use App\Orchid\Screens\Voucher\VoucherCardEditScreen;
+use App\Orchid\Screens\Voucher\VoucherCardListScreen;
+use App\Orchid\Screens\Voucher\VoucherPackageEditScreen;
+use App\Orchid\Screens\Voucher\VoucherPackageListScreen;
 use Illuminate\Support\Facades\Route;
 use Tabuna\Breadcrumbs\Trail;
 
@@ -84,21 +90,32 @@ Route::screen('roles', RoleListScreen::class)
         ->parent('platform.index')
         ->push(__('Roles'), route('platform.systems.roles')));
 
-// Example...
-Route::screen('example', ExampleScreen::class)
-    ->name('platform.example')
-    ->breadcrumbs(fn (Trail $trail) => $trail
-        ->parent('platform.index')
-        ->push('Example Screen'));
+Route::screen('catalog/categories', MenuCategoryListScreen::class)->name('platform.catalog.categories');
+Route::screen('catalog/categories/create', MenuCategoryEditScreen::class)->name('platform.catalog.categories.create');
+Route::screen('catalog/categories/{category}/edit', MenuCategoryEditScreen::class)->name('platform.catalog.categories.edit');
 
-Route::screen('/examples/form/fields', ExampleFieldsScreen::class)->name('platform.example.fields');
-Route::screen('/examples/form/advanced', ExampleFieldsAdvancedScreen::class)->name('platform.example.advanced');
-Route::screen('/examples/form/editors', ExampleTextEditorsScreen::class)->name('platform.example.editors');
-Route::screen('/examples/form/actions', ExampleActionsScreen::class)->name('platform.example.actions');
+Route::screen('catalog/items', MenuItemListScreen::class)->name('platform.catalog.items');
+Route::screen('catalog/items/create', MenuItemEditScreen::class)->name('platform.catalog.items.create');
+Route::screen('catalog/items/{item}/edit', MenuItemEditScreen::class)->name('platform.catalog.items.edit');
 
-Route::screen('/examples/layouts', ExampleLayoutsScreen::class)->name('platform.example.layouts');
-Route::screen('/examples/grid', ExampleGridScreen::class)->name('platform.example.grid');
-Route::screen('/examples/charts', ExampleChartsScreen::class)->name('platform.example.charts');
-Route::screen('/examples/cards', ExampleCardsScreen::class)->name('platform.example.cards');
+Route::screen('content/promotions', PromoBannerListScreen::class)->name('platform.content.promotions');
+Route::screen('content/promotions/create', PromoBannerEditScreen::class)->name('platform.content.promotions.create');
+Route::screen('content/promotions/{promoBanner}/edit', PromoBannerEditScreen::class)->name('platform.content.promotions.edit');
 
-// Route::screen('idea', Idea::class, 'platform.screens.idea');
+Route::screen('content/pages', CmsPageListScreen::class)->name('platform.content.pages');
+Route::screen('content/pages/create', CmsPageEditScreen::class)->name('platform.content.pages.create');
+Route::screen('content/pages/{page}/edit', CmsPageEditScreen::class)->name('platform.content.pages.edit');
+
+Route::screen('vouchers/packages', VoucherPackageListScreen::class)->name('platform.vouchers.packages');
+Route::screen('vouchers/packages/create', VoucherPackageEditScreen::class)->name('platform.vouchers.packages.create');
+Route::screen('vouchers/packages/{package}/edit', VoucherPackageEditScreen::class)->name('platform.vouchers.packages.edit');
+
+Route::screen('vouchers/cards', VoucherCardListScreen::class)->name('platform.vouchers.cards');
+Route::screen('vouchers/cards/create', VoucherCardEditScreen::class)->name('platform.vouchers.cards.create');
+Route::screen('vouchers/cards/{card}/edit', VoucherCardEditScreen::class)->name('platform.vouchers.cards.edit');
+
+Route::screen('operations/cashiers', CashierAccountListScreen::class)->name('platform.operations.cashiers');
+Route::screen('operations/cashiers/create', CashierAccountEditScreen::class)->name('platform.operations.cashiers.create');
+Route::screen('operations/cashiers/{cashier}/edit', CashierAccountEditScreen::class)->name('platform.operations.cashiers.edit');
+
+Route::screen('operations/orders', CustomerOrderListScreen::class)->name('platform.operations.orders');
