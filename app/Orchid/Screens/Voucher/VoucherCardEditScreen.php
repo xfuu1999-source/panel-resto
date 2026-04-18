@@ -58,7 +58,9 @@ class VoucherCardEditScreen extends Screen
                     ->title('Voucher Package')
                     ->options(VoucherPackage::query()->orderBy('name')->pluck('name', 'id')->toArray())
                     ->required(),
-                Input::make('card.code')->title('Card Code')->required(),
+                Input::make('card.code')
+                    ->title('Card Code')
+                    ->help('Kosongkan untuk generate otomatis.'),
                 Input::make('card.customer_name')->title('Customer Name')->required(),
                 Input::make('card.phone')->title('Phone'),
                 Input::make('card.telegram')->title('Telegram'),
@@ -66,8 +68,14 @@ class VoucherCardEditScreen extends Screen
                     ->title('Status')
                     ->options(VoucherCard::statusOptions())
                     ->required(),
-                Input::make('card.total_credits')->title('Total Credits')->type('number')->required(),
-                Input::make('card.remaining_credits')->title('Remaining Credits')->type('number')->required(),
+                Input::make('card.total_credits')
+                    ->title('Total Credits')
+                    ->type('number')
+                    ->help('Kosongkan untuk pakai credits bawaan package.'),
+                Input::make('card.remaining_credits')
+                    ->title('Remaining Credits')
+                    ->type('number')
+                    ->help('Kosongkan untuk samakan dengan total credits.'),
                 DateTimer::make('card.activated_at')->title('Activated At')->allowInput(),
                 DateTimer::make('card.expires_at')->title('Expires At')->allowInput(),
                 TextArea::make('card.notes')->title('Notes')->rows(4),
@@ -79,17 +87,22 @@ class VoucherCardEditScreen extends Screen
     {
         $payload = $request->validate([
             'card.voucher_package_id' => ['required', 'exists:voucher_packages,id'],
-            'card.code' => ['required', 'string', 'max:255', Rule::unique(VoucherCard::class, 'code')->ignore($card)],
+            'card.code' => ['nullable', 'string', 'max:255', Rule::unique(VoucherCard::class, 'code')->ignore($card)],
             'card.customer_name' => ['required', 'string', 'max:255'],
             'card.phone' => ['nullable', 'string', 'max:255'],
             'card.telegram' => ['nullable', 'string', 'max:255'],
             'card.status' => ['required', Rule::in(array_keys(VoucherCard::statusOptions()))],
-            'card.total_credits' => ['required', 'integer', 'min:0'],
-            'card.remaining_credits' => ['required', 'integer', 'min:0'],
+            'card.total_credits' => ['nullable', 'integer', 'min:0'],
+            'card.remaining_credits' => ['nullable', 'integer', 'min:0'],
             'card.activated_at' => ['nullable', 'date'],
             'card.expires_at' => ['nullable', 'date'],
             'card.notes' => ['nullable', 'string'],
         ])['card'];
+
+        $package = VoucherPackage::query()->findOrFail($payload['voucher_package_id']);
+        $payload['code'] = $payload['code'] ?: VoucherCard::generateUniqueCode();
+        $payload['total_credits'] = (int) ($payload['total_credits'] ?? $package->credits);
+        $payload['remaining_credits'] = (int) ($payload['remaining_credits'] ?? $payload['total_credits']);
 
         $card->fill($payload)->save();
 

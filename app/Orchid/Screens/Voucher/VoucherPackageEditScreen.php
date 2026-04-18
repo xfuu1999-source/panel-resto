@@ -4,13 +4,16 @@ declare(strict_types=1);
 
 namespace App\Orchid\Screens\Voucher;
 
+use App\Models\VoucherCard;
 use App\Models\VoucherPackage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\CheckBox;
+use Orchid\Screen\Fields\DateTimer;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Screen;
 use Orchid\Support\Facades\Layout;
@@ -22,6 +25,10 @@ class VoucherPackageEditScreen extends Screen
     {
         return [
             'package' => $package,
+            'generator' => [
+                'quantity' => 1,
+                'status' => VoucherCard::STATUS_PENDING,
+            ],
         ];
     }
 
@@ -46,6 +53,10 @@ class VoucherPackageEditScreen extends Screen
             Button::make('Save')
                 ->icon('bs.check-circle')
                 ->method('save'),
+            Button::make('Generate Cards')
+                ->icon('bs.ticket-perforated')
+                ->method('generateCards')
+                ->canSee(request()->route('package')?->exists === true),
         ];
     }
 
@@ -60,6 +71,24 @@ class VoucherPackageEditScreen extends Screen
                 CheckBox::make('package.is_active')->title('Active')->sendTrueOrFalse()->value(true),
                 TextArea::make('package.description')->title('Description')->rows(4),
             ]),
+            Layout::rows([
+                Input::make('generator.quantity')
+                    ->title('Cards to Generate')
+                    ->type('number')
+                    ->min(1)
+                    ->max(500)
+                    ->help('Set jumlah kartu lalu klik "Generate Cards".'),
+                Select::make('generator.status')
+                    ->title('Generated Card Status')
+                    ->options(VoucherCard::statusOptions())
+                    ->value(VoucherCard::STATUS_PENDING),
+                DateTimer::make('generator.expires_at')
+                    ->title('Generated Expiry')
+                    ->allowInput(),
+                TextArea::make('generator.notes')
+                    ->title('Generated Notes')
+                    ->rows(3),
+            ])->title('Auto Generate Voucher Cards'),
         ];
     }
 
@@ -82,6 +111,39 @@ class VoucherPackageEditScreen extends Screen
         Toast::info('Voucher package saved.');
 
         return redirect()->route('platform.vouchers.packages');
+    }
+
+    public function generateCards(VoucherPackage $package, Request $request)
+    {
+        $payload = $request->validate([
+            'generator.quantity' => ['required', 'integer', 'min:1', 'max:500'],
+            'generator.status' => ['required', Rule::in(array_keys(VoucherCard::statusOptions()))],
+            'generator.expires_at' => ['nullable', 'date'],
+            'generator.notes' => ['nullable', 'string'],
+        ])['generator'];
+
+        $quantity = (int) $payload['quantity'];
+        $status = $payload['status'];
+        $expiresAt = $payload['expires_at'] ?? null;
+        $notes = $payload['notes'] ?? null;
+
+        for ($index = 0; $index < $quantity; $index++) {
+            VoucherCard::query()->create([
+                'voucher_package_id' => $package->id,
+                'code' => VoucherCard::generateUniqueCode(),
+                'customer_name' => VoucherCard::GENERATED_CUSTOMER_NAME,
+                'status' => $status,
+                'total_credits' => $package->credits,
+                'remaining_credits' => $package->credits,
+                'activated_at' => $status === VoucherCard::STATUS_ACTIVE ? now() : null,
+                'expires_at' => $expiresAt,
+                'notes' => $notes,
+            ]);
+        }
+
+        Toast::info("Generated {$quantity} voucher cards for {$package->name}.");
+
+        return redirect()->route('platform.vouchers.cards');
     }
 
     public function remove(VoucherPackage $package)

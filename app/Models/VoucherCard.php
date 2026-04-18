@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Str;
 
 class VoucherCard extends Model
 {
@@ -16,6 +17,7 @@ class VoucherCard extends Model
     public const STATUS_ACTIVE = 'active';
     public const STATUS_INACTIVE = 'inactive';
     public const STATUS_USED_OUT = 'used_out';
+    public const GENERATED_CUSTOMER_NAME = 'Generated Card';
 
     protected $fillable = [
         'voucher_package_id',
@@ -49,6 +51,15 @@ class VoucherCard extends Model
             self::STATUS_INACTIVE => 'Inactive',
             self::STATUS_USED_OUT => 'Used Out',
         ];
+    }
+
+    public static function generateUniqueCode(): string
+    {
+        do {
+            $code = 'VB-'.Str::upper(Str::random(10));
+        } while (static::query()->where('code', $code)->exists());
+
+        return $code;
     }
 
     public function package(): BelongsTo

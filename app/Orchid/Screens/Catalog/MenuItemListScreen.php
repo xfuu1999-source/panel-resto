@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Orchid\Screens\Catalog;
 
 use App\Models\MenuItem;
+use Illuminate\Support\HtmlString;
 use Orchid\Screen\Actions\DropDown;
 use Orchid\Screen\Actions\Link;
 use Orchid\Screen\Screen;
@@ -52,6 +53,11 @@ class MenuItemListScreen extends Screen
     {
         return [
             Layout::table('items', [
+                TD::make('image_url', 'Photo')
+                    ->width('96')
+                    ->render(fn (MenuItem $item) => new HtmlString($item->image_url
+                        ? '<img src="'.e($item->image_url).'" alt="'.e($item->name).'" style="width:72px;height:72px;object-fit:cover;border-radius:12px;">'
+                        : '<span class="text-muted">No image</span>')),
                 TD::make('name')->sort(),
                 TD::make('category.name', 'Category'),
                 TD::make('price_riel', 'Price')->align(TD::ALIGN_RIGHT),

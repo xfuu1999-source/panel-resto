@@ -12,6 +12,7 @@ use Illuminate\Validation\Rule;
 use Orchid\Screen\Actions\Button;
 use Orchid\Screen\Fields\CheckBox;
 use Orchid\Screen\Fields\Input;
+use Orchid\Screen\Fields\Picture;
 use Orchid\Screen\Fields\Select;
 use Orchid\Screen\Fields\TextArea;
 use Orchid\Screen\Screen;
@@ -24,6 +25,7 @@ class MenuItemEditScreen extends Screen
     {
         return [
             'item' => $item,
+            'manual_image_url' => $item->image_url,
         ];
     }
 
@@ -69,8 +71,14 @@ class MenuItemEditScreen extends Screen
                     ->title('Price (Riel)')
                     ->type('number')
                     ->required(),
-                Input::make('item.image_url')
-                    ->title('Image URL'),
+                Picture::make('item.image_url')
+                    ->title('Food Photo')
+                    ->acceptedFiles('image/*')
+                    ->storage('public')
+                    ->path('menu-items/')
+                    ->help('Upload foto makanan langsung dari panel. Bisa juga tetap isi URL manual di bawah jika perlu.'),
+                Input::make('manual_image_url')
+                    ->title('Image URL (optional fallback)'),
                 Input::make('item.sort_order')
                     ->title('Sort Order')
                     ->type('number')
@@ -98,13 +106,17 @@ class MenuItemEditScreen extends Screen
             'item.slug' => ['nullable', 'string', 'max:255', Rule::unique(MenuItem::class, 'slug')->ignore($item)],
             'item.description' => ['nullable', 'string'],
             'item.image_url' => ['nullable', 'string', 'max:2048'],
+            'manual_image_url' => ['nullable', 'string', 'max:2048'],
             'item.price_riel' => ['required', 'integer', 'min:0'],
             'item.sort_order' => ['nullable', 'integer', 'min:0'],
             'item.is_active' => ['nullable', 'boolean'],
             'item.is_featured' => ['nullable', 'boolean'],
-        ])['item'];
+        ]);
+
+        $payload = $payload['item'];
 
         $payload['slug'] = Str::slug($payload['slug'] ?: $payload['name']);
+        $payload['image_url'] = $payload['image_url'] ?: ($request->input('manual_image_url') ?: null);
         $payload['sort_order'] = (int) ($payload['sort_order'] ?? 0);
         $payload['is_active'] = (bool) ($payload['is_active'] ?? false);
         $payload['is_featured'] = (bool) ($payload['is_featured'] ?? false);
